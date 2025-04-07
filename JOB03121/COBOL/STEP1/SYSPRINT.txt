@@ -1,0 +1,191 @@
+1PP 5655-EC6 IBM Enterprise COBOL for z/OS  6.4.0 P250221                 Date 04/07/2025  Time 07:52:54   Page     1
+0Options in effect:
+  NOADATA
+    ADV
+    AFP(NOVOLATILE)
+    QUOTE
+    ARCH(10)
+    ARITH(COMPAT)
+  NOAWO
+  NOBLOCK0
+    BUFSIZE(4096)
+  NOCICS
+    CODEPAGE(1140)
+  NOCOMPILE(S)
+    CONDCOMP(NOSKIPSRC)
+  NOCOPYLOC
+  NOCOPYRIGHT
+  NOCURRENCY
+    DATA(31)
+    DBCS
+  NODECK
+  NODEFINE
+  NODIAGTRUNC
+    DISPSIGN(COMPAT)
+  NODLL
+  NODUMP
+  NODYNAM
+  NOEXIT
+  NOEXPORTALL
+  NOFASTSRT
+    FLAG(I,I)
+  NOFLAGSTD
+    HGPR(PRESERVE)
+  NOINITCHECK
+  NOINITIAL
+    INLINE
+    INTDATE(ANSI)
+  NOINVDATA
+  NOJAVAIOP
+    LANGUAGE(EN)
+    LINECOUNT(60)
+  NOLIST
+    LP(32)
+  NOLSACHECK
+  NOMAP
+    MAXPCF(100000)
+  NOMDECK
+  NONAME
+    NSYMBOL(NATIONAL)
+  NONUMBER
+  NONUMCHECK
+    NUMPROC(NOPFD)
+    OBJECT
+  NOOFFSET
+    OPTIMIZE(0)
+    OUTDD(SYSOUT)
+  NOPARMCHECK
+    PGMNAME(COMPAT)
+    QUALIFY(COMPAT)
+1PP 5655-EC6 IBM Enterprise COBOL for z/OS  6.4.0 P250221                 Date 04/07/2025  Time 07:52:54   Page     2
+0   RENT
+    RMODE(AUTO)
+  NORULES
+  NOSERVICE
+    SEQUENCE
+    SMARTBIN
+    SOURCE(DEC)
+    SPACE(1)
+  NOSQL
+    SQLCCSID
+  NOSQLIMS
+  NOSSRANGE
+  NOSTGOPT
+    SUPPRESS
+  NOTERM
+  NOTEST(NODWARF,NOSOURCE,NOSEPARATE)
+  NOTHREAD
+    TRUNC(STD)
+    TUNE(10)
+  NOVBREF
+    VLR(STANDARD)
+    VSAMOPENFS(COMPAT)
+  NOWORD
+    XMLPARSE(XMLSS)
+    XREF(FULL)
+    ZWB
+1PP 5655-EC6 IBM Enterprise COBOL for z/OS  6.4.0 P250221       SETXCH    Date 04/07/2025  Time 07:52:54   Page     3
+   LineID  PL SL  ----+-*A-1-B--+----2----+----3----+----4----+----5----+----6----+----7-|--+----8 Map and Cross Reference
+0  000001               *-----------------------
+   000002                IDENTIFICATION DIVISION.
+   000003               *-----------------------
+   000004                PROGRAM-ID.    SETXCH
+   000005                AUTHOR.        Nikolaj R Christensen
+   000006               *--------------------
+   000007                ENVIRONMENT DIVISION.
+   000008               *--------------------
+   000009                INPUT-OUTPUT SECTION.
+   000010                FILE-CONTROL.
+   000011                    SELECT EXCHANGE-RATES ASSIGN TO EXCHANGERATES                         20
+
+ ==000011==> IGYGR1235-E The external name field of the assignment-name "EXCHANGERATES" was
+                         invalid.  It was processed as "EXCHANGE".
+
+ ==000011==> IGYGR0097-S A "RECORD KEY" clause was missing or invalid in the "SELECT" entry for
+                         file "EXCHANGE-RATES".  The file definition was discarded.
+
+   000012                    ORGANIZATION IS INDEXED
+   000013                    ACCESS MODE IS RANDOM
+   000014                    RECORD KEY IS CKEY                                                    DUP
+
+ ==000014==> IGYGR0037-S "CKEY" was not a uniquely defined name.  The definition to be used could
+                         not be determined from the context.  The reference to the name was
+                         discarded.
+
+   000015                    FILE STATUS IS WS-FILE-STATUS.                                        27
+   000016               *-------------
+   000017                DATA DIVISION.
+   000018               *-------------
+   000019                FILE SECTION.
+   000020                FD  EXCHANGE-RATES.
+   000021                01 EXCHANGE-RECORD.
+   000022                    05 CKEY PIC X(3).
+   000023                    05 CNAME PIC X(21).
+   000024                    05 CEXCH USAGE COMP-2.
+   000025               *-------------------
+   000026                WORKING-STORAGE SECTION.
+   000027                01 WS-FILE-STATUS PIC XX.
+   000028                01 WS-END-OF-FILE PIC X value 'n'.
+   000029                01 WS-RECORD.
+   000030                    05 CKEY PIC X(3).
+   000031                    05 CNAME PIC X(21).
+   000032                    05 CEXCH USAGE COMP-2.
+   000033               *------------------
+   000034                PROCEDURE DIVISION.
+   000035               *------------------
+   000036                MAIN-PROCEDURE.
+   000037                    GOBACK.
+1PP 5655-EC6 IBM Enterprise COBOL for z/OS  6.4.0 P250221       SETXCH    Date 04/07/2025  Time 07:52:54   Page     4
+0An "M" preceding a data-name reference indicates that the data-name is modified by this reference.
+
+  Defined   Cross-reference of data names   References
+
+       24   CEXCH
+       32   CEXCH
+       22   CKEY
+       30   CKEY
+       23   CNAME
+       31   CNAME
+       20   EXCHANGE-RATES . . . . . . . .  11
+       21   EXCHANGE-RECORD
+       28   WS-END-OF-FILE
+       27   WS-FILE-STATUS . . . . . . . .  15
+       29   WS-RECORD
+1PP 5655-EC6 IBM Enterprise COBOL for z/OS  6.4.0 P250221       SETXCH    Date 04/07/2025  Time 07:52:54   Page     5
+0Context usage is indicated by the letter preceding a procedure-name reference.
+ These letters and their meanings are:
+     A = ALTER (procedure-name)
+     D = GO TO (procedure-name) DEPENDING ON
+     E = End of range of (PERFORM) through (procedure-name)
+     G = GO TO (procedure-name)
+     P = PERFORM (procedure-name)
+     T = (ALTER) TO PROCEED TO (procedure-name)
+     U = USE FOR DEBUGGING (procedure-name)
+
+  Defined   Cross-reference of procedures   References
+
+       36   MAIN-PROCEDURE
+1PP 5655-EC6 IBM Enterprise COBOL for z/OS  6.4.0 P250221       SETXCH    Date 04/07/2025  Time 07:52:54   Page     6
+0 Defined   Cross-reference of programs     References
+
+        4   SETXCH
+1PP 5655-EC6 IBM Enterprise COBOL for z/OS  6.4.0 P250221       SETXCH    Date 04/07/2025  Time 07:52:54   Page     7
+0LineID  Message code  Message text
+
+     11  IGYGR1235-E   The external name field of the assignment-name "EXCHANGERATES" was invalid.  It was processed as "EXCHANGE".
+
+     11  IGYGR0097-S   A "RECORD KEY" clause was missing or invalid in the "SELECT" entry for file "EXCHANGE-RATES".  The file
+                       definition was discarded.
+
+     14  IGYGR0037-S   "CKEY" was not a uniquely defined name.  The definition to be used could not be determined from the context.
+                       The reference to the name was discarded.
+-Messages    Total    Informational    Warning    Error    Severe    Terminating
+0Printed:       3                                    1         2
+-* Statistics for COBOL program SETXCH:
+ *    Source records = 37
+ *    Data Division statements = 10
+ *    Procedure Division statements = 1
+ *    Generated COBOL statements = 0
+ *    Program complexity factor = 1
+0End of compilation 1,  program SETXCH,  highest severity 12.
+0Return code 12
