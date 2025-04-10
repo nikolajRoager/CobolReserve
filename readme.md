@@ -62,6 +62,8 @@ USERS
 ----------
 The users live in a data-set USERS, user acounts are stored in USERS.ACCOUNTS the transfers in USERS.TRANSFERS, really I want TRANSFER to be reset every year, month or whatever, with older versions archived, but time compelled me not to do that.
 
+USER.ACCOUNTS has 80 chars, but stores only key (10 chars), name (10 chars), account balance (16 digits, and 8 decimals), denominated currency (3 char), and password has: (10 chars), the rest is set asside for future
+
 JCL
 ------
 All JCL jobs live here, that includes compile jobs (end with a C), and run jobs (ends with a J), these jobs often have default parameters
