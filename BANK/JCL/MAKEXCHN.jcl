@@ -5,10 +5,10 @@
 //SYSIN      DD *
   DELETE Z67124.BANK.EXCHANGE
   SET MAXCC=0
-  DEFINE CLUSTER(     -
+  DEFINE CLUSTER(              -
     NAME(Z67124.BANK.EXCHANGE) -
-    TRACKS(30)        -
-    RECSZ(32 32)    -
-    INDEXED           -
-    KEYS(3 0)        -
+    TRACKS(30)                 -
+    RECSZ(32 32)               -
+    INDEXED                    -
+    KEYS(3 0)                  -
     CISZ(1024))

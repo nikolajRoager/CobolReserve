@@ -66,23 +66,26 @@
       * File not found (35) triggered by opening empty vsam files
               IF WS-FILE-STATUS NOT = '35'
       *Other errors can not be fixed, sorry
-                 DISPLAY 'ERROR: FILE OPEN ERROR-CODE:' WS-FILE-STATUS
+                   DISPLAY '{'
+                   DISPLAY '  "success":0'
+           DISPLAY '  "error":"Exchange file error ' WS-FILE-STATUS ' "'
+                   DISPLAY '}'
                  GOBACK
               ELSE
       *Open as output
-                 DISPLAY 'Opening as output'
                  OPEN OUTPUT EXCHANGE-RATES
                  IF WS-FILE-STATUS NOT = '00' AND NOT = '97'
-                   DISPLAY 'ERROR: FILE OPEN ERROR-CODE:' WS-FILE-STATUS
+                   DISPLAY '{'
+                   DISPLAY '  "success":0'
+           DISPLAY '  "error":"Exchange file error ' WS-FILE-STATUS ' "'
+                   DISPLAY '}'
                    GOBACK
                  ELSE
-                     DISPLAY 'Write to out'
                      PERFORM WRITE-TO-VSAM
                      CLOSE EXCHANGE-RATES
                      GOBACK
                  END-IF
            ELSE
-                DISPLAY 'Write to io'
                 PERFORM WRITE-TO-VSAM
                 CLOSE EXCHANGE-RATES
                 GOBACK
@@ -94,16 +97,17 @@
            MOVE WS-NAME TO E-NAME
            MOVE WS-MAN TO E-RATE-MAN
            MOVE WS-EXP TO E-RATE-EXP
-           DISPLAY 'WRITING ' WS-NAME
 
            WRITE E-RECORD
            INVALID KEY
       *get the existing record and overwrite it then
-               DISPLAY 'DUPLICATE KEY. UPDATING EXISTING RECORD...'
                READ EXCHANGE-RATES  RECORD KEY E-KEY
                INVALID KEY
       *I don't know if this is a thing which can even happen
-                   DISPLAY 'ERROR: DUBLICATE RECORD COULD NOT BE LOADED'
+                   DISPLAY '{'
+                   DISPLAY '  "success":0'
+           DISPLAY '  "error":"Dublicate key could not be loaded"' 
+                   DISPLAY '}'
                    GOBACK
                END-READ
       *Update the rest of the data, not the UID
@@ -115,7 +119,13 @@
                END-WRITE.
       *Verify that stuff happened
            IF WS-FILE-STATUS = '00'
-               DISPLAY 'UPDATED'
+               DISPLAY '{'
+               DISPLAY '  "success":1'
+               DISPLAY '  "error":"Added ' WS-NAME ' as ' WS-KEY ' "'
+               DISPLAY '}'
            ELSE
-               DISPLAY 'ERROR: UPDATE FAILED WITH STATUS' WS-FILE-STATUS
+              DISPLAY '{'
+              DISPLAY '  "success":0'
+           DISPLAY '  "error":"Exchange file error ' WS-FILE-STATUS ' "'
+              DISPLAY '}'
            END-IF.
