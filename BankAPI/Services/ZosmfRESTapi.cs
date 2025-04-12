@@ -106,6 +106,7 @@ namespace BankAPI.Services.ZosmfRESTapi
                 //This will only happen is the launching of the command fails
                 if (!string.IsNullOrEmpty(error))
                 {
+                    Console.WriteLine(error);
                     throw new Exception($"Error launching Z/OS job with zowe CLI : {error}");
                 }
 
@@ -150,12 +151,14 @@ namespace BankAPI.Services.ZosmfRESTapi
                 ProcessStartInfo processStartInfo = new ProcessStartInfo
                 {
                         FileName =  zoweCliExe,
-                        Arguments= $"zos-jobs submit lf {tempJCLFile} --rfj",
+                        Arguments= $"zos-jobs submit lf \"{tempJCLFile}\" --rfj",
                         RedirectStandardOutput=true,
                         RedirectStandardError=true,
                         UseShellExecute = false,
                         CreateNoWindow = true,
                 };
+
+                Console.WriteLine($"zos-jobs submit lf {tempJCLFile} --rfj");
 
                 //Launch the process
                 using (Process process = new Process())
@@ -193,6 +196,7 @@ namespace BankAPI.Services.ZosmfRESTapi
                     }
                     else
                     {
+                        Console.WriteLine(JsonOutput.RootElement.GetProperty("message").GetString());
                         throw new Exception($"Job could not be submitted, zowe cli returned error {JsonOutput.RootElement.GetProperty("message").GetString()}");
                     }
                 }

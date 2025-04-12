@@ -45,4 +45,18 @@ public class BankController : ControllerBase
             return Problem(e.Message);
         }
     }
+
+    [HttpPost("deposit-withdraw")]
+    public async Task<ActionResult<DepositReport>> AddUser(User user)
+    {
+        try
+        {
+            await zosmfApi.AddUser(user);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return Problem(e.Message);
+        }
+    }
 }
