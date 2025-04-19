@@ -6,6 +6,17 @@ There need to be a way of updating exchange rate betwixt currencies, transfering
 
 The banks need its own account, which gets a cut of all currency conversions, and adds interest to user accounts from bank accounts or gathers interest from dept. There is a different interest rate for dept.
 
+Quick note: downloading cobol files
+----------
+Cobol and JCL files can be downloaded with the zowe cli:, for example:
+
+    zowe zos-files download all-members "Z67124.BANK.CBL"
+
+After doing so it is necessary to fix the file-endings with the following bash command (use git bash on windows)
+
+    for file in z67124/bank/cbl/*; do mv "$file" "${file%.txt}.cbl"; done
+
+This is how I have updated the files in the project, if it looks like the github repo is having the files deleted and new files created in one commit, it is simply because I have run those commands.
 
 Wisthlist
 ========

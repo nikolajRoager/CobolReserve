@@ -28,24 +28,24 @@
       *Also, COMP-2 can not be directly printed to display, and is hard
       *to upload, as the version of COBOL on IBM Z Xplore doesn't allow
       *scientific notation
-           05 E-RATE-MAN PIC 9999.
-           05 E-RATE-EXP PIC S999.
+           05 E-RATE-MAN PIC 999999.
+           05 E-RATE-EXP PIC S9.
       *-------------------
        WORKING-STORAGE SECTION.
        01 WS-FILE-STATUS PIC XX.
        01 WS-RECORD.
            05 WS-KEY PIC X(3).
            05 WS-NAME PIC X(20).
-           05 WS-MAN PIC 9999.
-           05 WS-EXP PIC S999.
+           05 WS-MAN PIC 999999.
+           05 WS-EXP PIC S9.
       *Using PARM='...' limits me to one currency a time, but the code
       *becomes cleaner
        LINKAGE SECTION.
        01 ARG-BUFFER.
            05 ARG-LENGTH pic S9(4) COMP.
            05 ARG-RECORD.
-               10 ARG-BASE PIC XXXX.
-               10 ARG-EXP  PIC XXXX.
+               10 ARG-BASE PIC XXXXXX.
+               10 ARG-EXP  PIC XX.
                10 ARG-KEY PIC X(3).
                10 ARG-NAME PIC X(20).
        PROCEDURE DIVISION USING ARG-BUFFER.
@@ -67,7 +67,7 @@
               IF WS-FILE-STATUS NOT = '35'
       *Other errors can not be fixed, sorry
                    DISPLAY '{'
-                   DISPLAY '  "success":0'
+                   DISPLAY '  "success":0,'
            DISPLAY '  "error":"Exchange file error ' WS-FILE-STATUS ' "'
                    DISPLAY '}'
                  GOBACK
@@ -76,7 +76,7 @@
                  OPEN OUTPUT EXCHANGE-RATES
                  IF WS-FILE-STATUS NOT = '00' AND NOT = '97'
                    DISPLAY '{'
-                   DISPLAY '  "success":0'
+                   DISPLAY '  "success":0,'
            DISPLAY '  "error":"Exchange file error ' WS-FILE-STATUS ' "'
                    DISPLAY '}'
                    GOBACK
@@ -105,8 +105,8 @@
                INVALID KEY
       *I don't know if this is a thing which can even happen
                    DISPLAY '{'
-                   DISPLAY '  "success":0'
-           DISPLAY '  "error":"Dublicate key could not be loaded"' 
+                   DISPLAY '  "success":0,'
+           DISPLAY '  "error":"Dublicate key could not be loaded"'
                    DISPLAY '}'
                    GOBACK
                END-READ
@@ -120,12 +120,12 @@
       *Verify that stuff happened
            IF WS-FILE-STATUS = '00'
                DISPLAY '{'
-               DISPLAY '  "success":1'
+               DISPLAY '  "success":1,'
                DISPLAY '  "error":"Added ' WS-NAME ' as ' WS-KEY ' "'
                DISPLAY '}'
            ELSE
               DISPLAY '{'
-              DISPLAY '  "success":0'
+              DISPLAY '  "success":0,'
            DISPLAY '  "error":"Exchange file error ' WS-FILE-STATUS ' "'
               DISPLAY '}'
            END-IF.

@@ -28,15 +28,14 @@
       *Just for checking if it exists
        FD  EXCHANGE-RATES DATA RECORD IS E-RECORD.
        01  E-RECORD.
-      *UID is generated from navy, type, and id number
            05 E-KEY PIC X(3).
            05 E-NAME PIC X(20).
-           05 E-MAN  PIC 9999.
-           05 E-EXP  PIC S999.
+           05 E-MAN  PIC 999999.
+           05 E-EXP  PIC S9.
        FD  USER-ACCOUNTS DATA RECORD IS ACT-REC.
        01 ACT-REC.
            05 F-NAME     PIC X(9).
-           05 F-BALANCE  PIC 9(12)V9(5).
+           05 F-BALANCE  PIC 9(12)V9(4).
            05 F-CURRENCY PIC X(3).
       *-------------------
        WORKING-STORAGE SECTION.
@@ -44,7 +43,7 @@
        01 WS-E-FILE-STATUS PIC XX.
        01 WS-RECORD.
            05 WS-NAME     PIC X(9).
-           05 WS-BALANCE  PIC 9(12)V9(5).
+           05 WS-BALANCE  PIC 9(12)V9(4).
            05 WS-CURRENCY PIC X(3).
        01 WS-IS-DUBLICATE PIC X value 'N'.
        01 WS-VALID-CURRENCY PIC X value 'Y'.
@@ -54,13 +53,13 @@
        01 ARG-BUFFER.
            05 ARG-LENGTH pic S9(4) COMP.
            05 ARG-RECORD.
-              10 ARG-BALANCE  PIC X(12)XX(5).
+              10 ARG-BALANCE  PIC X(12)XX(4).
               10 ARG-CURRENCY PIC X(3).
               10 ARG-NAME     PIC X(9).
        PROCEDURE DIVISION USING ARG-BUFFER.
       *------------------
        READ-INPUT.
-           COMPUTE ARG-LENGTH = ARG-LENGTH - 21.
+           COMPUTE ARG-LENGTH = ARG-LENGTH - 20.
            COMPUTE WS-BALANCE = FUNCTION NUMVAL(ARG-BALANCE).
            MOVE SPACES TO WS-NAME.
            MOVE ARG-NAME(1:ARG-LENGTH ) TO WS-NAME.
@@ -68,10 +67,10 @@
            PERFORM CHECK-CURRENCY.
            IF WS-VALID-CURRENCY = 'N'
                DISPLAY '{'
-               DISPLAY '  "success":0'
+               DISPLAY '  "success":0,'
            DISPLAY '  "error":"Currency invalid ' WS-VALID-CURRENCY ' "'
                DISPLAY '}'.
-              
+
        OPEN-FILE.
       *Output to write new entries, Input to check for duplicate keys
            OPEN I-O USER-ACCOUNTS.
@@ -82,7 +81,7 @@
               IF WS-FILE-STATUS NOT = '35'
       *Other errors can not be fixed, sorry
                    DISPLAY '{'
-                   DISPLAY '  "success":0'
+                   DISPLAY '  "success":0,'
            DISPLAY '  "error":"Accounts file error ' WS-FILE-STATUS ' "'
                    DISPLAY '}'
                  GOBACK
@@ -91,7 +90,7 @@
                  OPEN OUTPUT USER-ACCOUNTS
                  IF WS-FILE-STATUS NOT = '00' AND NOT = '97'
                    DISPLAY '{'
-                   DISPLAY '  "success":0'
+                   DISPLAY '  "success":0,'
            DISPLAY '  "error":"Accounts file error ' WS-FILE-STATUS ' "'
                    DISPLAY '}'
                    GOBACK
@@ -106,7 +105,7 @@
                 PERFORM CHECK-EXISTING
                 IF WS-IS-DUBLICATE = 'Y'
                    DISPLAY '{'
-                   DISPLAY '  "success":0'
+                   DISPLAY '  "success":0,'
                    DISPLAY '  "error":"user already exists"'
                    DISPLAY '}'
                    CLOSE USER-ACCOUNTS
@@ -134,24 +133,18 @@
       *Try just uploading it, if it doesn't work, maybe the key exists
            MOVE WS-RECORD TO ACT-REC
            WRITE ACT-REC
-           INVALID KEY
-      *Should not happen, we already checked dublicates
-               DISPLAY '{'
-               DISPLAY '  "success":0'
-               DISPLAY '  "error":"Invalid key writing user account"'
-               DISPLAY '}'
            END-WRITE.
       *Verify that stuff happened
            IF WS-FILE-STATUS = '00'
                DISPLAY '{'
-               DISPLAY '  "success":1'
+               DISPLAY '  "success":1,'
                DISPLAY '  "error":"added ' WS-NAME ' "'
                DISPLAY '}'
            ELSE
-                   DISPLAY '{'
-                   DISPLAY '  "success":0'
+               DISPLAY '{'
+               DISPLAY '  "success":0,'
            DISPLAY '  "error":"Accounts file error ' WS-FILE-STATUS ' "'
-                   DISPLAY '}'
+               DISPLAY '}'
            END-IF.
        CHECK-CURRENCY.
       *Check for existing key, first open the file
@@ -159,16 +152,15 @@
            OPEN INPUT EXCHANGE-RATES
            IF WS-FILE-STATUS NOT = '00' AND NOT = '97'
       *Currency not found, nor the file it is in
-               MOVE 'N' TO WS-E-FILE-STATUS 
+               MOVE 'N' TO WS-VALID-CURRENCY
            ELSE
                READ EXCHANGE-RATES RECORD KEY E-KEY
                INVALID KEY
       *Currency not found
-                   MOVE 'N' TO WS-E-FILE-STATUS 
+                   MOVE 'N' TO WS-VALID-CURRENCY
                NOT INVALID KEY
       *There it is
-                   MOVE 'Y' TO WS-E-FILE-STATUS 
+                   MOVE 'Y' TO WS-VALID-CURRENCY
                END-READ
-               CLOSE EXCHANGE-RATES
-           END-IF.
-      *Verify that the requested currency exists 
+           END-IF
+           CLOSE EXCHANGE-RATES.

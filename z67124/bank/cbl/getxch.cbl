@@ -1,25 +1,27 @@
       *-----------------------
        IDENTIFICATION DIVISION.
       *-----------------------
-       PROGRAM-ID.    GETUSERS
+       PROGRAM-ID.    GETEXCH
        AUTHOR.        Nikolaj R Christensen
       *--------------------
        ENVIRONMENT DIVISION.
       *--------------------
        INPUT-OUTPUT SECTION.
        FILE-CONTROL.
-           SELECT USER-ACCOUNTS ASSIGN TO EXCHANGE
+           SELECT EXCHANGE-RATES ASSIGN TO EXCHANGE
               ORGANIZATION IS INDEXED
               ACCESS MODE IS DYNAMIC
-              RECORD KEY IS F-NAME
+              RECORD KEY IS E-KEY
               FILE STATUS IS WS-FILE-STATUS.
        DATA DIVISION.
        FILE SECTION.
-       FD  USER-ACCOUNTS DATA RECORD IS ACT-REC.
-       01 ACT-REC.
-           05 F-NAME     PIC X(9).
-           05 F-BALANCE  PIC 9(12)V9(5).
-           05 F-CURRENCY PIC X(3).
+       FD  EXCHANGE-RATES DATA RECORD IS E-RECORD.
+       01  E-RECORD.
+           05 E-KEY PIC X(3).
+           05 E-NAME PIC X(20).
+           05 E-MAN  PIC 999999.
+           05 E-EXP  PIC S9.
+
        WORKING-STORAGE SECTION.
        01  WS-FILE-STATUS     PIC XX.
        01  WS-EOF             PIC X VALUE 'N'.
@@ -27,11 +29,11 @@
 
       *The above signed number may be stored in weird stupid ebsidec
       *We need to move to the below to get something readable
-       01 WS-DISPLAY-SIGNED PIC -999.
+       01 WS-DISPLAY-SIGNED PIC -9.
 
        PROCEDURE DIVISION.
        MAIN-PROCEDURE.
-           OPEN INPUT USER-ACCOUNTS
+           OPEN INPUT EXCHANGE-RATES
            IF WS-FILE-STATUS NOT = '00' AND WS-FILE-STATUS NOT = '97'
               DISPLAY '{"success":0,'
               DISPLAY '"error":"File error ' WS-FILE-STATUS '"}'
@@ -41,7 +43,7 @@
               DISPLAY '"error":"File error ' WS-FILE-STATUS '",'
               DISPLAY '"exchangeRates":['
            PERFORM UNTIL WS-EOF = 'Y'
-               READ USER-ACCOUNTS NEXT RECORD
+               READ EXCHANGE-RATES NEXT RECORD
                    AT END
                        MOVE 'Y' TO WS-EOF
                    NOT AT END
@@ -50,13 +52,14 @@
                        END-IF
 
                        DISPLAY '{'
-                       DISPLAY '"Name":"' F-NAME '",'
-                       DISPLAY '"Balance":"' F-BALANCE '",'
-                       DISPLAY '"Currency":"' F-CURRENCY '",'
+                       DISPLAY '"Key":"' E-KEY '",'
+                       DISPLAY '"Name":"' E-NAME '",'
+                       MOVE E-EXP TO WS-DISPLAY-SIGNED
+                       DISPLAY '"Rate":' E-MAN 'E' WS-DISPLAY-SIGNED
                        DISPLAY '}'
                        MOVE 'N' TO WS-START
               END-READ
            END-PERFORM.
               DISPLAY ']}'
-           CLOSE USER-ACCOUNTS.
+           CLOSE EXCHANGE-RATES.
            GOBACK.
