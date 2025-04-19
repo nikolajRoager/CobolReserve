@@ -1,7 +1,0 @@
-0.0200 0.0500 0.010 0.020
-From left to right:
-transaction fee,
-exchange fee,
-interest per month,
-interest rate for dept per month
-Lines below the first are ignored

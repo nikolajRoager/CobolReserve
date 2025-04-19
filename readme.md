@@ -27,20 +27,23 @@ A C\# program automatically updates the exchange rates, either using historical 
 
 Accounts and transfers
 ----------
-Accounts can be added using a JCL program, callable from C\#, each account stores: userid name, denoted currency, ammount, and a file (just a normal file) of historical transaction betwixt other accounts
+Accounts can be added using a JCL program, callable from C\#, each account stores: 9 letter name, account currency, balance, and a list of all historical transaction betwixt other accounts. 
 
-Transfers contain TRANSFER-ID DATE-TIME OTHER-ID OTHER-CURRENCY AMMOUNT-MYACCOUNT AMMOUNT-SEND AMMOUNT-TRANSFER-FEE AMMOUNT-EXCHANGE-FEE. If OTHER-ID is OUTSIDE the transfer is a withdrawal or money inserted from outside I imagine a plain text file is better for storing this, is we can ensure transfers are added in chronological order.
+Transfers contain TRANSFER-ID DATE-TIME OTHER-ID OTHER-CURRENCY AMMOUNT-MYACCOUNT AMMOUNT-SEND AMMOUNT-TRANSFER-FEE AMMOUNT-EXCHANGE-FEE. If OTHER-ID is literally "OUTSIDE" the transfer is a withdrawal or money deposited from outside.
 
-A COBOL program need to be able to withdraw or add money to the account. A flag must be set if the operation is allowed to result in dept
+It is possible to deposit or withdraw money to your account by calling a cobol program.
 
-A COBOL program need to be able to add transfers and update both accounts
+This Cobol program returns a JSON report, reporting if the operation was successful, and reporting all fees and amounts. If successful, money is added to or withdrawn from the user account in the currency of that account, a transfer fee is added to the bank account (taken from the depositted amount, or the account in the case of a withdrawal); if the deposit or withdrawal is a different currency, it is converted to that of the account, and an exchange fee is deducted.
 
-A COBOL or JCL program must be able to add a new user to the system, including setting up everything
+The bank account is excempt from all fees.
 
-A program needs to be called every day, which automatically adds interest to all accounts
+A similar program allows transfer of money betwixt accounts; the same transfer fee is applied. The amount can be denoted in any currency, an exchange fee is only included if the receiving account has different currency than the sender.
 
-A program needs to exist, which prints a json with your account data, historical transfers, and historical account ammount
+No password check is performed on the IBM Z/OS mainframe, since it realistically is running on an offline mainframe, in the same building as the C# middleware server. So password checks should happen on the C# side.
 
+Interest calculation
+-----------
+A COBOL program on the mainframe automatically transfers interest to or from each account.
 
 Files and structure
 =====

@@ -46,13 +46,14 @@ public class BankController : ControllerBase
         }
     }
 
+    ///Realistically, this is where we should check username and password
     [HttpPost("deposit-withdraw")]
-    public async Task<ActionResult<DepositReport>> AddUser(User user)
+    public async Task<ActionResult<TransferReport>> AddUser(string user, double amount, string currency)
     {
         try
         {
-            await zosmfApi.AddUser(user);
-            return Ok();
+            var Out = await zosmfApi.depositWithdraw();
+            return Ok(Out);
         }
         catch (Exception e)
         {
