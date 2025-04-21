@@ -10,7 +10,7 @@
        FILE-CONTROL.
            SELECT USER-TRANSFERS ASSIGN TO TRANSFER
                ORGANIZATION IS INDEXED
-               ACCESS MODE IS RANDOM
+               ACCESS MODE IS DYNAMIC
                RECORD KEY IS TR-KEY
                FILE STATUS IS WS-FILE-STATUS.
        DATA DIVISION.
@@ -60,30 +60,58 @@
        01  WS-EOF             PIC X VALUE 'N'.
        01  WS-START           PIC X VALUE 'Y'.
        01 WS-DISPLAY-AMOUNT PIC -Z(10)9.9(4).
+       01 WS-NAME PIC X(9).
 
       *The above signed number may be stored in weird stupid ebsidec
       *We need to move to the below to get something readable
        01 WS-DISPLAY-SIGNED PIC -999.
-
-       PROCEDURE DIVISION.
-       MAIN-PROCEDURE.
+       LINKAGE SECTION.
+       01 ARG-BUFFER.
+           05 ARG-LENGTH pic S9(4) COMP.
+           05 ARG-RECORD.
+              10 ARG-NAME     PIC X(9).
+       PROCEDURE DIVISION USING ARG-BUFFER.
+       LOAD-INPUT.
+           MOVE SPACES TO TR-MY-NAME.
+           MOVE ARG-NAME(1:ARG-LENGTH ) TO TR-MY-NAME.
+           MOVE SPACES TO WS-NAME.
+           MOVE ARG-NAME(1:ARG-LENGTH ) TO WS-NAME.
+           MOVE 0 TO TR-YEAR TR-MONTH TR-DAY TR-HOUR TR-MINUTE TR-SECOND
+              TR-MILIS.
            OPEN INPUT USER-TRANSFERS
            IF WS-FILE-STATUS NOT = '00' AND WS-FILE-STATUS NOT = '97'
               DISPLAY '{"success":0,'
               DISPLAY '"error":"File error ' WS-FILE-STATUS '"}'
               GOBACK.
        READ-FILE.
+
+           START USER-TRANSFERS KEY >= TR-KEY
+              INVALID KEY
+      *Finding a user has no history counts as a success in my book
+              DISPLAY '{"success":1,'
+              DISPLAY '"error":"No transactions"'
+              DISPLAY '"Transfers":[]'
+              CLOSE USER-TRANSFERS
+              GOBACK.
+
               DISPLAY '{"success":1,'
               DISPLAY '"error":"File error ' WS-FILE-STATUS '",'
-              DISPLAY '"Users":['
+              DISPLAY '"Transfers":['
+
            PERFORM UNTIL WS-EOF = 'Y'
                READ USER-TRANSFERS NEXT RECORD
                    AT END
                        MOVE 'Y' TO WS-EOF
                    NOT AT END
-                       IF WS-START NOT = 'Y'
-                          DISPLAY ','
-                       END-IF
+      *If we get somebody else, stop
+           IF TR-MY-NAME NOT = WS-NAME
+               EXIT PERFORM
+           END-IF
+           IF WS-START NOT = 'Y'
+              DISPLAY ','
+           END-IF
+           MOVE 'N' TO WS-START
+
            DISPLAY '{'
            DISPLAY '"Key":"' TR-KEY '",'
            DISPLAY '"Account":"' TR-MY-NAME '",'
@@ -107,7 +135,7 @@
 
            MOVE TR-TRANSACTION-FEE TO WS-DISPLAY-AMOUNT
            DISPLAY '"TransactionFee":' WS-DISPLAY-AMOUNT
-           DISPLAY '},'
+           DISPLAY '}'
               END-READ
            END-PERFORM.
               DISPLAY ']}'

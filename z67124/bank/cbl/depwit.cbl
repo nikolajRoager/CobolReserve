@@ -196,7 +196,6 @@
            MOVE SPACES TO ACT-NAME.
            MOVE ARG-CURRENCY TO WS-CURRENCY.
            MOVE ARG-NAME(1:ARG-LENGTH) TO ACT-NAME.
-           DISPLAY ACT-NAME.
        OPEN-FILES.
 
       *I-O, because we both need to read and write
@@ -259,7 +258,8 @@
                INVALID KEY
                DISPLAY '{'
                DISPLAY '  "success":0,'
-               DISPLAY '  "error":"Account ' ACT-NAME ' not found "'
+               DISPLAY '  "error":"Account ' ACT-NAME(1:ARG-LENGTH)
+                 ' not found"'
                DISPLAY '}'
                CLOSE USER-ACCOUNTS
                CLOSE USER-TRANSFERS
@@ -332,12 +332,12 @@
                  PERFORM LOG-TRANSFER
                  IF WS-SUCCESS-WRITE = 'Y'
                       DISPLAY '  "success":1,'
-                      DISPLAY '"error":"No error",'
+                      DISPLAY '"error":"No error"'
                  ELSE
       *It still counts as a success, the transaction went through
       *But the log failed to update
                       DISPLAY '  "success":1,'
-                      DISPLAY '"error":"Error writing log",'
+                      DISPLAY '"error":"Error writing log"'
                  END-IF
                  DISPLAY '}'
                CLOSE USER-ACCOUNTS

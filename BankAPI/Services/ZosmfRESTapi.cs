@@ -265,8 +265,24 @@ namespace BankAPI.Services.ZosmfRESTapi
                         
                         var data_records= await client.GetAsync($"{recordsUrl}");
                         data_records.EnsureSuccessStatusCode();
-                        var data = await data_records.Content.ReadAsStringAsync();
-                        return data;
+                        string data = await data_records.Content.ReadAsStringAsync();
+
+                        //We will loop through the data, and trim all spaces outside "
+                        //This is easier to do in C# than COBOL
+                        var output = new StringBuilder();
+                        bool insideQuotes=false;
+                        foreach(char c in data)
+                        {
+                            if (c=='\"')
+                            {
+                                output.Append(c);
+                                insideQuotes=!insideQuotes;
+                            }
+                            else if (insideQuotes || c!=' ')//Only add if not a space, unless we are inside quotes
+                                output.Append(c);
+                        }
+
+                        return output.ToString();
 
                     }
                 }
@@ -388,6 +404,7 @@ namespace BankAPI.Services.ZosmfRESTapi
                 "//ACCOUNTS DD DSN=&SYSUID..BANK.USERS.ACCOUNTS,DISP=SHR\n"+
                 "//TRANSFER DD DSN=&SYSUID..BANK.USERS.TRANSFER,DISP=SHR\n"+
                 "//EXCHANGE DD DSN=&SYSUID..BANK.EXCHANGE,DISP=SHR\n"+
+                "//STATFILE DD DSN=&SYSUID..BANK(STATS),DISP=SHR\n"+
                 "//*Link libraries\n"+
                 "//STEPLIB DD DSN=&SYSUID..BANK.LOAD,DISP=SHR\n"+
                 "//SYSOUT    DD SYSOUT=*,OUTLIM=15000\n"+
@@ -457,6 +474,18 @@ namespace BankAPI.Services.ZosmfRESTapi
             return jobList.Users;
         }
 
+        public class DebwitOut
+        {
+            [JsonPropertyName("Success")]
+                public int Success { get; set; }
+
+            [JsonPropertyName("Error")]
+            public string Error { get; set; } = null!;
+
+            [JsonPropertyName("receipt")]
+            public TransferReport? receipt {get; set;} = null;
+        }
+
         public async Task AddUser (User user)
         {
             //Post the job using a ZOWE hack (if the mainframe doesn't support http post)
@@ -498,7 +527,7 @@ namespace BankAPI.Services.ZosmfRESTapi
             Console.WriteLine(output);
         }
 
-        public Task<TransferReport> depositWithdraw(string user, double amount, string currency)
+        public async Task<TransferReport> depositWithdraw(string user, double amount, string currency)
         {
             //Post the job using a ZOWE hack (if the mainframe doesn't support http post)
             //Put the balance in the expected format
@@ -508,7 +537,8 @@ namespace BankAPI.Services.ZosmfRESTapi
                 throw new Exception("User name too long, at most 9 chars");
             
             //No need to explicitly pad out the length, COBOL can handle too short arguments
-            (string jobUrl,string jobFilesUrl) = SubmitZoweJobArg(DepositRawJCL.Replace("REPLACE",$"{Amount.ToString("000000000000.0000")}{Currency}{user}"));
+            (string jobUrl,string jobFilesUrl) = SubmitZoweJobArg(
+                DepositRawJCL.Replace("REPLACE",$"{(amount>0?amount.ToString("000000000000.0000"):"-"+(-amount).ToString("00000000000.0000"))}{currency}{user}"));
             string status="ACTIVE";
             //ONLY poll up to 15 times, spaced out over 1 minute
             for (int i = 0; i < 15; ++i)
@@ -536,8 +566,18 @@ namespace BankAPI.Services.ZosmfRESTapi
             }
             //The job is done, now get the result
             string output= await getSysout(jobFilesUrl);
-            
             Console.WriteLine(output);
+            var jobList = JsonSerializer.Deserialize<DebwitOut>(output, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (jobList == null || jobList.Success==0 || jobList.receipt==null)
+            {
+                throw new Exception("Could not perform operation: "+jobList.Error);
+            }
+            else
+                return jobList.receipt;
         }
     }
 }

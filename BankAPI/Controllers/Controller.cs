@@ -52,7 +52,7 @@ public class BankController : ControllerBase
     {
         try
         {
-            var Out = await zosmfApi.depositWithdraw();
+                var Out = await zosmfApi.depositWithdraw(user, amount, currency);
             return Ok(Out);
         }
         catch (Exception e)
