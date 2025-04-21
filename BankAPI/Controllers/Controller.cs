@@ -46,13 +46,35 @@ public class BankController : ControllerBase
         }
     }
 
-    ///Realistically, this is where we should check username and password
+    ///Deposit or withdraw an amount from this or to this account
+    ///Returns a copy of the transfer report for this operation
+    ///Returns error in case of overdraft or invalid user
     [HttpPost("deposit-withdraw")]
     public async Task<ActionResult<TransferReport>> AddUser(string user, double amount, string currency)
     {
         try
         {
-                var Out = await zosmfApi.depositWithdraw(user, amount, currency);
+            //Realistically, this is where we should check username and password
+            //This isn't done in this example... but it should be here
+            var Out = await zosmfApi.depositWithdraw(user, amount, currency);
+            return Ok(Out);
+        }
+        catch (Exception e)
+        {
+            return Problem(e.Message);
+        }
+    }
+
+    ///View all historical transfers involving this user, and only this user
+    ///Returns a (maybe empty) list
+    [HttpPost("getTransfers")]
+    public async Task<ActionResult<IEnumerable<TransferReport>>> AddUser(string user)
+    {
+        try
+        {
+            //Realistically, this is where we should check username and password
+            //This isn't done in this example... but it should be here
+            var Out = await zosmfApi.getTransfers(user);
             return Ok(Out);
         }
         catch (Exception e)

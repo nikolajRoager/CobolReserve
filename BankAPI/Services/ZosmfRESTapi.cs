@@ -21,6 +21,8 @@ namespace BankAPI.Services.ZosmfRESTapi
         public Task AddUser (User user);
 
         public Task<TransferReport> depositWithdraw(string user, double amount, string currency);
+
+        public Task<IEnumerable<TransferReport>> getTransfers(string user);
     }
 
     ///<summary>
@@ -305,6 +307,8 @@ namespace BankAPI.Services.ZosmfRESTapi
         private readonly string AddUserRawJCL;
 
         private readonly string DepositRawJCL;
+        
+        private readonly string GetTransfersRawJCL;
 
         public ZosmfRESTapi(string host, string port, string zosUsername, string zosPassword)
         {
@@ -411,6 +415,21 @@ namespace BankAPI.Services.ZosmfRESTapi
                 "//CEEDUMP   DD DUMMY\n"+
                 "//SYSUDUMP  DD DUMMY\n";
 
+            GetTransfersRawJCL=
+"//GETTRF JOB 1,NOTIFY=&SYSUID\n"+
+"//***************************************************/\n"+
+"//STEP1 EXEC PGM=DEPWIT,PARM='Nikolaj C'\n"+
+"//*Link VSAM file\n"+
+"//ACCOUNTS DD DSN=&SYSUID..BANK.USERS.ACCOUNTS,DISP=SHR\n"+
+"//TRANSFER DD DSN=&SYSUID..BANK.USERS.TRANSFER,DISP=SHR\n"+
+"//EXCHANGE DD DSN=&SYSUID..BANK.EXCHANGE,DISP=SHR\n"+
+"//*Link default stats\n"+
+"//STATFILE DD DSN=&SYSUID..BANK(STATS),DISP=SHR\n"+
+"//*Link libraries\n"+
+"//STEPLIB DD DSN=&SYSUID..BANK.LOAD,DISP=SHR\n"+
+"//SYSOUT    DD SYSOUT=*,OUTLIM=15000\n"+
+"//CEEDUMP   DD DUMMY\n"+
+"//SYSUDUMP  DD DUMMY\n";
 
             if (!zoweCliWorks())
                 throw new Exception($"Zowe CLI could not be found at {zoweCliExe}, install it through npm, and add it to your path");
@@ -484,6 +503,18 @@ namespace BankAPI.Services.ZosmfRESTapi
 
             [JsonPropertyName("receipt")]
             public TransferReport? receipt {get; set;} = null;
+        }
+
+        public class TransfersOut
+        {
+            [JsonPropertyName("Success")]
+                public int Success { get; set; }
+
+            [JsonPropertyName("Error")]
+            public string Error { get; set; } = null!;
+
+            [JsonPropertyName("Transfers")]
+            public IEnumerable<TransferReport>? Transfers {get; set;} = null;
         }
 
         public async Task AddUser (User user)
@@ -567,17 +598,66 @@ namespace BankAPI.Services.ZosmfRESTapi
             //The job is done, now get the result
             string output= await getSysout(jobFilesUrl);
             Console.WriteLine(output);
-            var jobList = JsonSerializer.Deserialize<DebwitOut>(output, new JsonSerializerOptions
+            var report = JsonSerializer.Deserialize<DebwitOut>(output, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
 
-            if (jobList == null || jobList.Success==0 || jobList.receipt==null)
+            if (report== null || report.Success==0 || report.receipt==null)
             {
-                throw new Exception("Could not perform operation: "+jobList.Error);
+                throw new Exception("Could not perform operation: "+(report != null ? report.Error:"null"));
             }
             else
-                return jobList.receipt;
+                return report.receipt;
+        }
+
+        public async Task<IEnumerable<TransferReport>> getTransfers(string user)
+        {
+            if (user.Length>9)
+                throw new Exception("User name too long, at most 9 chars");
+            
+            //No need to explicitly pad out the length, COBOL can handle too short arguments
+            (string jobUrl,string jobFilesUrl) = SubmitZoweJobArg(
+                GetTransfersRawJCL.Replace("REPLACE",$"{user}"));
+            string status="ACTIVE";
+            //ONLY poll up to 15 times, spaced out over 1 minute
+            for (int i = 0; i < 15; ++i)
+            {
+                //Wait 2 seconds
+                await Task.Delay(2000);
+                //Check status
+                status =await getJobStatus(jobUrl);
+
+                //Some documentation insist that this is also a valid exit code
+                if (status=="ABENDED")
+                {
+                    //Should really not happen in normal usage
+                    throw new Exception("Job exited with mainframe-side COBOL error (status: ABEND)");
+                }
+                else if (status!="ACTIVE" && status!="IDLE" && status!="WAITING")
+                {
+                    break;
+                }
+            }
+
+            if (status!="OUTPUT")
+            {
+                throw new Exception("Job stopped or timed out, with status other than output, status: "+status);
+            }
+            //The job is done, now get the result
+            string output= await getSysout(jobFilesUrl);
+            Console.WriteLine(output);
+            var report = JsonSerializer.Deserialize<TransfersOut>(output, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (report== null || report.Success==0 || report.Transfers==null)
+            {
+                throw new Exception("Could not perform operation: "+(report != null ? report.Error:"null"));
+            }
+            else
+                return report.Transfers;
         }
     }
 }
