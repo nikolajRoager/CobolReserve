@@ -1,12 +1,62 @@
 Cobol Reserve Bank program
 =====================
-A curency reserve bank emulated with a Cobol program. We need to store a few accounts, with amount stored, denoted in different currencies, and transfer history stored on the Z-Explore mainframe.
+This training project in Cobol and Ibm Z/OS simulates a bank emulated with dozens of Cobol and JCL program.
 
-There need to be a way of updating exchange rate betwixt currencies, transfering between accounts, including currency conversions
+The bank can store multiple different accounts, denoted in different currencies, and there are Cobol programs which can handle transfers betwixt accounts, or deposits, and withdrawals.
 
-The banks need its own account, which gets a cut of all currency conversions, and adds interest to user accounts from bank accounts or gathers interest from dept. There is a different interest rate for dept.
+The bank's own account gets a cut of all currency conversions, and adds interest to user accounts from bank accounts or gathers interest from dept. There is a different interest rate for dept.
 
-Quick note: downloading cobol files
+
+
+Main challanges
+================
+The main interesting challanges (beyond my earlier COBOL Navy project) I had to solve were: working with floating point numbers in Cobol, and viewing lists of entries for certain users in VSAM files.
+
+Floating point numbers
+---------
+The exchange rate between currencies must be floating point numbers, that is decimal numbers where we don't know where the decimal is.
+
+That is how every civilized language stores decimal numbers, but not COBOL, COBOL wants to know exactly how many digits are before or after the decimal marker.
+
+There are situation where the COBOL approach is better than even C++, but this is Not one of them. Today, there may be 6.45 Kr per US$, but if or when Trump finds the room with the money printer that might drop to 1 Kr per million US$
+
+COBOL does support floating point numbers `COMP 2` ... but they are not as flexible as a `double` in C++, in particular there is not good way of printing the value in a useable format, nor is there a good way of uploading a floating point number to a COBOL program.
+
+The `DISPLAY` statement only prints the individual bytes of the number, and the `NUMVAL` function for converting strings to numbers only understands digits and explicit decimals.
+
+IBM claims that is because there doesn't exist a way of writing floating point numbers; this is not true, scientific notation exist, where we write the number `0.00001356` as `1.356e-5`. The number before the e is called the mantissa, the number after is the exponent.
+
+This is understood by numerous programming languges such as C++, C\# regular C and Javascript, and as such is accepted bythe JSON format (the format of the internet, which I am going to be using for returning the result of the COBOL programs).
+
+It is possible to convert a `COMP-2` number to its mantissa and exponent in Cobol, and using it, it is possible to print it in scientific notation. It is also possible to extract the mantissa and exponent from a string in scientific notation... But doing so is so difficult, uggly and annoying that it was easier to just implement my own floating point numbers, by explicitly storing the mantissa and exponent of exchange rates as variables in my Cobol program.
+
+In particular my Mantissa of the exchange rate is stored with 6 digits, and my exponent has 1 digit and a sign.
+
+This takes the same number of bytes as a `COMP-2` but has slightly smaller range of exponents, but in practice the exchange rate between two currencies is very unlikely to be a billion to one (and if it is, if Trump does find the aforementioned money-printer, I doubt anybody will be doing any transfers in that currency anyway)
+
+
+Setting up the project
+==============
+
+COBOL project
+------------
+The Cobol and JCL scripts are stored in z67124/bank/cbl and z67124/bank/jcl which mirror the structure on the Z/OS mainframe (my free account on Z explorer is z67124, replace it with yours if you have one).
+
+In general jcl scripts ending with a C compile the associated cobol file.
+
+The JCL scripts resetusr.jcl and makexchn.jcl create empty VSAM files containing exchange rates and users (they include my account explicitly, so may require some reworking if yours is different)
+
+The file z67124/bank/stats.txt must also be uploaded to the mainframe, it contains some basic stats, including default currency, fees, and the (unused) interest rate.
+
+C\# middleware
+------------
+The C\# dotnet project acts as middleware betwixt a swagger frontend, and the Z/OS mainframe. 
+
+In particular it allows you to add or see users, deposit or withdraw money, and transfer money between accounts.
+
+All actual calculations happen in the Cobol programs
+
+Quick note: how to download the files
 ----------
 Cobol and JCL files can be downloaded with the zowe cli:, for example:
 
@@ -17,77 +67,3 @@ After doing so it is necessary to fix the file-endings with the following bash c
     for file in z67124/bank/cbl/*; do mv "$file" "${file%.txt}.cbl"; done
 
 This is how I have updated the files in the project, if it looks like the github repo is having the files deleted and new files created in one commit, it is simply because I have run those commands.
-
-Wisthlist
-========
-
-Currency, and global settings
------------------
-All currency is relative to the default currency, a VSAM file contains the currency name, and exchange rate to default currency, keyed by their code (like EUR, DKK, etc). The default currency is also in the list but its exchange rate is forced to be 1
-
-A global constant file sets default currency key. This should not be changed in normal use! It can only be changed by uploading it
-
-A global settings file contains the transaction fee, and exchange fee, interest rate, and time the history was started
-
-A COBOL program allows the uploading of new exchange rates
-
-A GETTIME function gets a fictional time (clock is running at a day per 30 seconds)
-
-A C\# program automatically updates the exchange rates, either using historical or fictional data
-
-
-Accounts and transfers
-----------
-Accounts can be added using a JCL program, callable from C\#, each account stores: 9 letter name, account currency, balance, and a list of all historical transaction betwixt other accounts. 
-
-Transfers contain TRANSFER-ID DATE-TIME OTHER-ID OTHER-CURRENCY AMMOUNT-MYACCOUNT AMMOUNT-SEND AMMOUNT-TRANSFER-FEE AMMOUNT-EXCHANGE-FEE. If OTHER-ID is literally "OUTSIDE" the transfer is a withdrawal or money deposited from outside.
-
-It is possible to deposit or withdraw money to your account by calling a cobol program.
-
-This Cobol program returns a JSON report, reporting if the operation was successful, and reporting all fees and amounts. If successful, money is added to or withdrawn from the user account in the currency of that account, a transfer fee is added to the bank account (taken from the depositted amount, or the account in the case of a withdrawal); if the deposit or withdrawal is a different currency, it is converted to that of the account, and an exchange fee is deducted.
-
-The bank account is excempt from all fees.
-
-A similar program allows transfer of money betwixt accounts; the same transfer fee is applied. The amount can be denoted in any currency, an exchange fee is only included if the receiving account has different currency than the sender.
-
-No password check is performed on the IBM Z/OS mainframe, since it realistically is running on an offline mainframe, in the same building as the C# middleware server. So password checks should happen on the C# side.
-
-Interest calculation
------------
-A COBOL program on the mainframe automatically transfers interest to or from each account.
-
-Files and structure
-=====
-The file structure of this repository exactly mirrors the file structure on the mainframe, I assume the project is stored in z99999.BANK (where 99999 is our user id)
-
-I know the folders aren't nested on IBM Z/OS, but I name them as if they were, and it is easier to think of them that way, and just search for z99999.BANK to only see the bank
-
-BANK contains settings and data
----------
-Contains various data used by the programs, DEFAULT simply contains the default currency key and name
-
-STATS contain stats for the bank, from left to right, separeted with 1 space transfer fee, exchange fee, interest on deposits, interest on dept, everything is stored as ZVZZZZ representing a percentage (for instance 1.0000 is 100%)
-
-finally the VSAM file EXCHANGE (can be created as empty with BANK.JCL.MAKEXCHN.JCL) contains the currencies, identified by their 3 letter abbreviation, and containing their name (up to 20 chars), and exchange rate to the default currency (COMP-2), this is needed!!! as both the other and default currency may experience hyper-inflation!
-
-That is, we use 3 bytes for the key, 20 for the name, and 8 for a COMP-8, for 31 in total, which I am just going to round up to 32 bytes. The exchange data can be populated with example data by running SETXCHNJ.jcl (runs the program compiled from SETXCHNG.cbl with default parameters)
-
-USERS
-----------
-The users live in a data-set USERS, user acounts are stored in USERS.ACCOUNTS the transfers in USERS.TRANSFERS, really I want TRANSFER to be reset every year, month or whatever, with older versions archived, but time compelled me not to do that.
-
-USER.ACCOUNTS has 80 chars, but stores only key (10 chars), name (10 chars), account balance (16 digits, and 8 decimals), denominated currency (3 char), and password has: (10 chars), the rest is set asside for future
-
-JCL
-------
-All JCL jobs live here, that includes compile jobs (end with a C), and run jobs (ends with a J), these jobs often have default parameters
-
-Compile jobs generally don't compile dependencies, that is up to the user.
-
-CBL
--------
-All cobol code live here, I try to keep the names 7 letters or below so that the compile jobs can match without going over the 8 char limit
-
-LOAD
-----
-All compiled programs get put here by the compile jobs

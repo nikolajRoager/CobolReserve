@@ -67,7 +67,7 @@ public class BankController : ControllerBase
 
     ///View all historical transfers involving this user, and only this user
     ///Returns a (maybe empty) list
-    [HttpPost("getTransfers")]
+    [HttpGet("getTransfers")]
     public async Task<ActionResult<IEnumerable<TransferReport>>> AddUser(string user)
     {
         try
@@ -75,6 +75,22 @@ public class BankController : ControllerBase
             //Realistically, this is where we should check username and password
             //This isn't done in this example... but it should be here
             var Out = await zosmfApi.getTransfers(user);
+            return Ok(Out);
+        }
+        catch (Exception e)
+        {
+            return Problem(e.Message);
+        }
+    }
+
+    [HttpPost("Transfer")]
+    public async Task<ActionResult<IEnumerable<TransferReport>>> AddUser(string From, string To, double Amount, string Currency)
+    {
+        try
+        {
+            //Realistically, this is where we should check username and password
+            //This isn't done in this example... but it should be here
+            var Out = await zosmfApi.transfer(From, To, Amount, Currency);
             return Ok(Out);
         }
         catch (Exception e)
