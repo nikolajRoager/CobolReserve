@@ -1,25 +1,31 @@
 {
   "format": 1,
   "restore": {
-    "/home/nikolaj/Cobol/CobolReserve/BankAPI/BankAPI.csproj": {}
+    "C:\\Users\\Nikolaj Christensen\\Cobol\\CobolReserve\\BankAPI\\BankAPI.csproj": {}
   },
   "projects": {
-    "/home/nikolaj/Cobol/CobolReserve/BankAPI/BankAPI.csproj": {
+    "C:\\Users\\Nikolaj Christensen\\Cobol\\CobolReserve\\BankAPI\\BankAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/nikolaj/Cobol/CobolReserve/BankAPI/BankAPI.csproj",
+        "projectUniqueName": "C:\\Users\\Nikolaj Christensen\\Cobol\\CobolReserve\\BankAPI\\BankAPI.csproj",
         "projectName": "BankAPI",
-        "projectPath": "/home/nikolaj/Cobol/CobolReserve/BankAPI/BankAPI.csproj",
-        "packagesPath": "/home/nikolaj/.nuget/packages/",
-        "outputPath": "/home/nikolaj/Cobol/CobolReserve/BankAPI/obj/",
+        "projectPath": "C:\\Users\\Nikolaj Christensen\\Cobol\\CobolReserve\\BankAPI\\BankAPI.csproj",
+        "packagesPath": "C:\\Users\\Nikolaj Christensen\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Nikolaj Christensen\\Cobol\\CobolReserve\\BankAPI\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/home/nikolaj/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Nikolaj Christensen\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -38,7 +44,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.100"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net9.0": {
@@ -64,12 +70,6 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[9.0.3, 9.0.3]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -78,7 +78,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.104/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
